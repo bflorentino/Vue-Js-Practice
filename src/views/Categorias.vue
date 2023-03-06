@@ -52,15 +52,20 @@
                         </button>
                     </span>
                     <span>
-                        <RouterLink 
-                            :to="{path: `/categoria/editar/${info.idCategoria}`}" 
-                            class="text-blue-600 hover:underline"
+                        <button 
+                            class="text-blue-600 hover:underline disabled:text-gray-400 disabled:hover:no-underline"
+                            :disabled="info.condicion"
+                            @click="handleActivacion(info.idCategoria)"
                         >
                             Activar
-                        </RouterLink>
+                        </button>
                     </span>
                     <span>
-                        <button class="text-blue-600 hover:underline" @click="handleDelete(info.idCategoria)">
+                        <button 
+                            class="text-blue-600 hover:underline  disabled:text-gray-400 disabled:hover:no-underline"
+                            @click="handleActivacion(info.idCategoria)"
+                            :disabled="!info.condicion"
+                        >
                             Desactivar
                         </button>
                     </span>
@@ -68,7 +73,6 @@
             </tr>
         </tbody>
     </table>
-
 </template>
 
 <script>
@@ -92,7 +96,7 @@ export default{
         async getCategorias() {
             const response = await fetch("https://localhost:7028/api/categorias");
             const data = await response.json();
-            return data;
+            return data
         },
 
         async deleteCategoria(idCategoria){
@@ -122,6 +126,29 @@ export default{
                     this.categorias = this.categorias.filter(c => c.idCategoria !== idCategoria)
                 }
             }
+        },
+
+        async handleActivacion(idCategoria){
+
+            const res = await this.activaODesactiva(idCategoria)
+
+            if(!res.ok){
+                Swal.fire("Accion no completada", "No se pudo realizar la accion debido a un error", "error" )
+                return
+            }
+
+            Swal.fire("Accion completada", "Accion completada con exito", "success" )
+            this.categorias = this.categorias.map(c => c.idCategoria === idCategoria ? {...c, condicion:!c.condicion} : c)
+        },
+
+        async activaODesactiva(idCategoria){
+
+            const req = {
+                method:'PUT',
+            }
+
+            const res = await fetch(`https://localhost:7028/api/categorias/activacion/${idCategoria}`, req)
+            return res
         }
     },
     components: { RouterLink, Navigator }
